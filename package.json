@@ -13,7 +13,7 @@
     "@fontsource/geist-mono": "^5.2.5",
     "@fontsource/geist-sans": "^5.2.5",
     "@phosphor-icons/react": "^2.1.7",
-    "hono": "^4.12.32",
+
     "motion": "^12.23.25",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
