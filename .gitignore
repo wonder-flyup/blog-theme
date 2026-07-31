@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 .env
+pictures
+server/node_modules
+server/content/uploads
 workers/.dev.vars
 workers/node_modules
 
