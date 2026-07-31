@@ -10,7 +10,14 @@
       "Bash(taskkill /F /IM node.exe)",
       "Bash(taskkill //F //IM node.exe)",
       "Bash(npx vite *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git rm *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git config *)",
+      "Bash(git push *)",
+      "Bash(xargs -0 ls -l)",
+      "Bash(awk '{sum+=$5} END {print sum/1024/1024 \" MB\"}')"
     ]
   }
 }

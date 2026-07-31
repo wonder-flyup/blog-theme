@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy:frontend": "vite build",
-    "deploy:worker": "cd workers && npm run deploy"
+    "deploy:frontend": "vite build"
   },
   "dependencies": {
     "@fontsource/geist-mono": "^5.2.5",
