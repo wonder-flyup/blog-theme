@@ -1,0 +1,19 @@
+{
+  "name": "blog-server",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "gray-matter": "^4.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "marked": "^16.1.2",
+    "multer": "^2.2.0"
+  }
+}

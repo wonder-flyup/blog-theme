@@ -1,0 +1,17 @@
+name = "blog-theme-api"
+main = "src/index.js"
+compatibility_date = "2025-07-31"
+
+# R2 bucket — created via `wrangler r2 bucket create blog-content`
+[[r2_buckets]]
+binding = "BLOG"
+bucket_name = "blog-content"
+
+# Environment variables (set via wrangler or dashboard)
+[vars]
+ADMIN_PASSWORD = "admin123"
+JWT_SECRET = "blog-secret-key-change-me"
+
+# Custom domain routing
+# After deployment, set up a custom domain in Cloudflare dashboard:
+# api.yourdomain.com → this worker
