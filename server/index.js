@@ -34,6 +34,12 @@ app.use(cors())
 app.use(express.json())
 app.use('/uploads', express.static(UPLOADS_DIR))
 
+// Serve frontend static files in production
+const FRONTEND_DIST = join(__dirname, '..', 'dist')
+if (existsSync(FRONTEND_DIST)) {
+  app.use(express.static(FRONTEND_DIST))
+}
+
 // Auth middleware
 function auth(req, res, next) {
   const header = req.headers.authorization
@@ -111,6 +117,17 @@ app.get('/api/favicon', async (req, res) => {
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
+})
+
+// SPA fallback — all non-API routes → index.html
+app.use((req, res) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return
+  const htmlPath = join(FRONTEND_DIST, 'index.html')
+  if (existsSync(htmlPath)) {
+    res.sendFile(htmlPath)
+  } else {
+    res.status(404).send('Frontend not built. Run: npm run build')
+  }
 })
 
 app.listen(PORT, () => {
