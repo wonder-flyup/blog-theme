@@ -12,7 +12,10 @@ dist
 dist-ssr
 *.local
 .env
+.env.example
 pictures
+DEBUGLOG.md
+DEPLOY.md
 server/node_modules
 server/content/uploads
 workers/.dev.vars
