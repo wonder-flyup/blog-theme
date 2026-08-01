@@ -3,8 +3,9 @@ import express from 'express'
 import cors from 'cors'
 import jwt from 'jsonwebtoken'
 import multer from 'multer'
+import sharp from 'sharp'
 import { join, dirname } from 'path'
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, renameSync } from 'fs'
 import { fileURLToPath } from 'url'
 import postsRouter from './routes/posts.js'
 import categoriesRouter from './routes/categories.js'
@@ -64,10 +65,31 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ token })
 })
 
-// Image upload (auth required)
-app.post('/api/upload', auth, upload.single('image'), (req, res) => {
+// Image upload (auth required) — auto-crop to square & resize to 512px
+app.post('/api/upload', auth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file' })
-  res.json({ url: `/uploads/${req.file.filename}` })
+  try {
+    const filePath = req.file.path
+    const metadata = await sharp(filePath).metadata()
+    const size = Math.min(metadata.width, metadata.height)
+    // Center-crop to square, then resize to 512×512
+    await sharp(filePath)
+      .extract({
+        left: Math.floor((metadata.width - size) / 2),
+        top: Math.floor((metadata.height - size) / 2),
+        width: size,
+        height: size,
+      })
+      .resize(512, 512)
+      .toFile(filePath + '.tmp')
+    // Replace original with processed version
+    renameSync(filePath + '.tmp', filePath)
+    res.json({ url: `/uploads/${req.file.filename}` })
+  } catch (err) {
+    console.error('Image processing error:', err)
+    // Still return the original if processing fails
+    res.json({ url: `/uploads/${req.file.filename}` })
+  }
 })
 
 // API routes — public read

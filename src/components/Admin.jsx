@@ -471,9 +471,10 @@ function LinkManager({ token }) {
   const [loading, setLoading] = useState(true)
   const [newUrl, setNewUrl] = useState('')
   const [newDesc, setNewDesc] = useState('')
-  const [newImage, setNewImage] = useState(null) // File object
+  const [newImage, setNewImage] = useState(null) // File object for new link
   const [uploading, setUploading] = useState(false)
-  const [editing, setEditing] = useState(null) // { id, url, description }
+  const [editing, setEditing] = useState(null) // { id, url, description, imageFile, clearImage }
+  const [editUploading, setEditUploading] = useState(false)
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -493,6 +494,20 @@ function LinkManager({ token }) {
     try { return new URL(url).origin + '/favicon.ico' } catch { return '' }
   }
 
+  // Upload image and return URL
+  async function uploadImage(file) {
+    const formData = new FormData()
+    formData.append('image', file)
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    })
+    if (!res.ok) throw new Error('图片上传失败')
+    const data = await res.json()
+    return data.url
+  }
+
   async function handleCreate(e) {
     e.preventDefault()
     setError('')
@@ -504,16 +519,7 @@ function LinkManager({ token }) {
       let imageUrl = ''
       if (newImage) {
         setUploading(true)
-        const formData = new FormData()
-        formData.append('image', newImage)
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        })
-        if (!res.ok) throw new Error('Image upload failed')
-        const data = await res.json()
-        imageUrl = data.url
+        imageUrl = await uploadImage(newImage)
         setUploading(false)
       }
       await createLink({ url: newUrl.trim(), name: getDomain(newUrl.trim()), description: newDesc.trim(), image: imageUrl || undefined }, token)
@@ -529,12 +535,23 @@ function LinkManager({ token }) {
 
   async function handleUpdate(id) {
     setError('')
+    setEditUploading(true)
     try {
-      await updateLink(id, { url: editing.url, name: getDomain(editing.url), description: editing.description }, token)
+      let imageUrl = undefined
+      if (editing.clearImage) {
+        imageUrl = ''  // explicitly clear
+      } else if (editing.imageFile) {
+        imageUrl = await uploadImage(editing.imageFile)
+      }
+      const payload = { url: editing.url, name: getDomain(editing.url), description: editing.description }
+      if (imageUrl !== undefined) payload.image = imageUrl
+      await updateLink(id, payload, token)
       setEditing(null)
+      setEditUploading(false)
       await load()
     } catch (err) {
       setError(err.message)
+      setEditUploading(false)
     }
   }
 
@@ -581,36 +598,74 @@ function LinkManager({ token }) {
             style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }}
           >
             {editing?.id === link.id ? (
-              <div className="flex flex-1 items-center gap-3 flex-wrap">
-                <input
-                  value={editing.url}
-                  onChange={(e) => setEditing({ ...editing, url: e.target.value })}
-                  className="flex-1 min-w-[140px] rounded-lg border px-3 py-1.5 text-sm outline-none"
-                  style={inputStyle}
-                  placeholder="链接地址"
-                />
-                <input
-                  value={editing.description || ''}
-                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                  className="flex-1 min-w-[120px] rounded-lg border px-3 py-1.5 text-sm outline-none"
-                  style={inputStyle}
-                  placeholder="描述"
-                />
-                <button
-                  onClick={() => handleUpdate(link.id)}
-                  className="rounded-lg p-1.5 transition-colors hover:opacity-70"
-                  style={{ color: 'var(--color-accent)' }}
-                  title="保存"
-                >
-                  <Check size={16} weight="bold" />
-                </button>
-                <button
-                  onClick={() => setEditing(null)}
-                  className="rounded-lg p-1.5 text-sm transition-colors hover:opacity-70"
-                  style={{ color: 'var(--color-text-tertiary)' }}
-                >
-                  取消
-                </button>
+              <div className="flex flex-col gap-3 w-full">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <input
+                    value={editing.url}
+                    onChange={(e) => setEditing({ ...editing, url: e.target.value })}
+                    className="flex-1 min-w-[140px] rounded-lg border px-3 py-1.5 text-sm outline-none"
+                    style={inputStyle}
+                    placeholder="链接地址"
+                  />
+                  <input
+                    value={editing.description || ''}
+                    onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                    className="flex-1 min-w-[120px] rounded-lg border px-3 py-1.5 text-sm outline-none"
+                    style={inputStyle}
+                    placeholder="描述"
+                  />
+                </div>
+                {/* Image upload row in edit mode */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>头像：</span>
+                  {/* Show current or preview */}
+                  {editing.clearImage ? (
+                    <span className="text-xs line-through" style={{ color: 'var(--color-text-tertiary)' }}>已移除</span>
+                  ) : editing.imageFile ? (
+                    <span className="text-xs" style={{ color: 'var(--color-accent)' }}>{editing.imageFile.name}</span>
+                  ) : link.image ? (
+                    <img src={link.image} alt="" className="h-6 w-6 rounded object-cover" />
+                  ) : (
+                    <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>无（使用 favicon）</span>
+                  )}
+                  <label className="cursor-pointer rounded-lg border px-2.5 py-1 text-xs transition-colors hover:opacity-70" style={{ ...inputStyle, display: 'inline-block' }}>
+                    选择图片
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setEditing({ ...editing, imageFile: e.target.files[0] || null, clearImage: false })}
+                      className="hidden"
+                    />
+                  </label>
+                  {!editing.clearImage && (link.image || editing.imageFile) && (
+                    <button
+                      onClick={() => setEditing({ ...editing, imageFile: null, clearImage: true })}
+                      className="rounded-lg border px-2.5 py-1 text-xs transition-colors hover:opacity-70"
+                      style={{ borderColor: '#f87171', color: '#f87171' }}
+                    >
+                      移除头像
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleUpdate(link.id)}
+                    disabled={editUploading}
+                    className="rounded-lg p-1.5 transition-colors hover:opacity-70 disabled:opacity-50"
+                    style={{ color: 'var(--color-accent)' }}
+                    title="保存"
+                  >
+                    <Check size={16} weight="bold" />
+                  </button>
+                  <button
+                    onClick={() => setEditing(null)}
+                    className="rounded-lg p-1.5 text-sm transition-colors hover:opacity-70"
+                    style={{ color: 'var(--color-text-tertiary)' }}
+                  >
+                    取消
+                  </button>
+                  {editUploading && <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>上传中...</span>}
+                </div>
               </div>
             ) : (
               <>
@@ -634,7 +689,7 @@ function LinkManager({ token }) {
                 </div>
                 <div className="flex items-center gap-1 shrink-0 ml-2">
                   <button
-                    onClick={() => setEditing({ id: link.id, url: link.url, description: link.description || '' })}
+                    onClick={() => setEditing({ id: link.id, url: link.url, description: link.description || '', imageFile: null, clearImage: false })}
                     className="rounded-lg p-2 transition-colors hover:opacity-70"
                     style={{ color: 'var(--color-accent)' }}
                     title="编辑"
