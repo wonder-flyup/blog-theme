@@ -3,9 +3,10 @@ title: "basic"
 date: "2026-08-01"
 description: ""
 tags: []
-draft: false
+draft: true
 category: "tech"
 ---
+
 
 # 函数库
 ## ```c<string.h>```
@@ -201,3 +202,4 @@ ps:打印整型数组的时候，只能通过遍历来实现打印。
     typedef enum{false=0,true=1}bool;
 #endif
 ```
+
