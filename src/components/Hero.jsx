@@ -35,7 +35,9 @@ export default function Hero() {
         animate="visible"
         custom={0.1}
       >
-        死亡不是终点，遗忘才是
+        死亡不是终点，
+        <br />
+        遗忘才是
       </motion.h1>
 
       {/* Subtext */}
