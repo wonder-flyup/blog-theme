@@ -1,4 +1,12 @@
 [
-  { "slug": "tech", "name": "技术", "description": "技术分享与编程笔记" },
-  { "slug": "notes", "name": "随记", "description": "日常随想与生活记录" }
+  {
+    "slug": "tech",
+    "name": "技术",
+    "description": "技术分享与编程笔记"
+  },
+  {
+    "slug": "notes",
+    "name": "随记",
+    "description": "日常随想与生活记录"
+  }
 ]

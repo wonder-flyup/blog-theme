@@ -17,7 +17,17 @@
       "Bash(git config *)",
       "Bash(git push *)",
       "Bash(xargs -0 ls -l)",
-      "Bash(awk '{sum+=$5} END {print sum/1024/1024 \" MB\"}')"
+      "Bash(awk '{sum+=$5} END {print sum/1024/1024 \" MB\"}')",
+      "Bash(npm run *)",
+      "Bash(node -e ' *)",
+      "Bash(nslookup *)",
+      "Bash(gh auth *)",
+      "Bash(git credential *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(node *)",
+      "Bash(chromium-cli *)",
+      "Bash(start *)"
     ]
   }
 }
